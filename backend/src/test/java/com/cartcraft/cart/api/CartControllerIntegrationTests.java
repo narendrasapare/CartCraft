@@ -13,6 +13,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -26,7 +27,7 @@ class CartControllerIntegrationTests {
 
     @Test
     void createsUpdatesReadsAndRemovesCartItems() throws Exception {
-        String createResponse = mockMvc.perform(post("/api/carts"))
+        String createResponse = mockMvc.perform(post("/api/carts").with(csrf()))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.items.length()").value(0))
                 .andReturn()
@@ -34,7 +35,7 @@ class CartControllerIntegrationTests {
                 .getContentAsString();
         String cartId = JsonPath.read(createResponse, "$.id");
 
-        mockMvc.perform(put("/api/carts/{cartId}/items/{productId}", cartId, 1)
+        mockMvc.perform(put("/api/carts/{cartId}/items/{productId}", cartId, 1).with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"quantity\":2}"))
                 .andExpect(status().isOk())
@@ -47,7 +48,7 @@ class CartControllerIntegrationTests {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalQuantity").value(2));
 
-        mockMvc.perform(delete("/api/carts/{cartId}/items/{productId}", cartId, 1))
+        mockMvc.perform(delete("/api/carts/{cartId}/items/{productId}", cartId, 1).with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.items.length()").value(0))
                 .andExpect(jsonPath("$.subtotal").value(0));
@@ -55,13 +56,13 @@ class CartControllerIntegrationTests {
 
     @Test
     void rejectsInvalidQuantity() throws Exception {
-        String createResponse = mockMvc.perform(post("/api/carts"))
+        String createResponse = mockMvc.perform(post("/api/carts").with(csrf()))
                 .andReturn()
                 .getResponse()
                 .getContentAsString();
         String cartId = JsonPath.read(createResponse, "$.id");
 
-        mockMvc.perform(put("/api/carts/{cartId}/items/{productId}", cartId, 1)
+        mockMvc.perform(put("/api/carts/{cartId}/items/{productId}", cartId, 1).with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"quantity\":0}"))
                 .andExpect(status().isBadRequest());
