@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import App from './App'
 
 const products = [
@@ -10,16 +10,34 @@ const products = [
 ]
 
 describe('App', () => {
+  beforeEach(() => localStorage.clear())
   afterEach(() => vi.restoreAllMocks())
 
-  it('loads catalogue products and updates the bag', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => products }))
+  it('loads catalogue products and persists an item in the bag', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = input.toString()
+      if (url === '/api/products') return { ok: true, json: async () => products }
+      if (url === '/api/carts' && init?.method === 'POST') {
+        return { ok: true, json: async () => ({ id: 'cart-1', items: [], totalQuantity: 0, subtotal: 0 }) }
+      }
+      if (url === '/api/carts/cart-1/items/1' && init?.method === 'PUT') {
+        return { ok: true, json: async () => ({
+          id: 'cart-1',
+          items: [{ productId: 1, name: 'Everyday Backpack', slug: 'everyday-backpack', unitPrice: 1899, imageUrl: products[0].imageUrl, quantity: 1, lineTotal: 1899 }],
+          totalQuantity: 1,
+          subtotal: 1899,
+        }) }
+      }
+      throw new Error(`Unexpected request: ${init?.method ?? 'GET'} ${url}`)
+    }))
     const user = userEvent.setup()
     render(<App />)
     expect(await screen.findByText('Everyday Backpack')).toBeInTheDocument()
     expect(screen.getByText('Mechanical Keyboard')).toBeInTheDocument()
     expect(screen.getByText('Wireless Headphones')).toBeInTheDocument()
     await user.click(screen.getAllByRole('button', { name: 'Add to bag' })[0])
-    expect(screen.getByRole('button', { name: 'Shopping bag with 1 items' })).toBeInTheDocument()
+    expect(await screen.findByRole('button', { name: 'Shopping bag with 1 items' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Shopping bag' })).toBeInTheDocument()
+    expect(localStorage.getItem('cartcraft.cartId')).toBe('cart-1')
   })
 })
