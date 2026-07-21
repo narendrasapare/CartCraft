@@ -2,6 +2,10 @@ import { useEffect, useMemo, useState } from 'react'
 import { fetchProducts } from './catalogue/api'
 import { ProductCard } from './catalogue/ProductCard'
 import type { Product } from './catalogue/types'
+import { CartDrawer } from './cart/CartDrawer'
+import { useCart } from './cart/useCart'
+import { IdentityPanel } from './identity/IdentityPanel'
+import { useIdentity } from './identity/useIdentity'
 import './App.css'
 
 const categories = [
@@ -13,10 +17,11 @@ const categories = [
 const App = () => {
   const [products, setProducts] = useState<Product[]>([])
   const [selectedCategory, setSelectedCategory] = useState<string | number>('all')
-  const [bagCount, setBagCount] = useState(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [requestKey, setRequestKey] = useState(0)
+  const bag = useCart()
+  const identity = useIdentity()
 
   useEffect(() => {
     const controller = new AbortController()
@@ -47,7 +52,10 @@ const App = () => {
       <header className="site-header">
         <a className="brand" href="#top" aria-label="CartCraft home"><span className="brand-mark" aria-hidden="true">C</span><span>CartCraft</span></a>
         <nav className="primary-nav" aria-label="Primary navigation"><a href="#collection">Collection</a><a href="#principles">Our standard</a></nav>
-        <button className="bag-button" type="button" aria-label={`Shopping bag with ${bagCount} items`}><span>Bag</span><span className="bag-count">{bagCount}</span></button>
+        <div className="header-actions">
+          {identity.customer ? <div className="account-menu"><span>Hi, {identity.customer.displayName}</span><button type="button" onClick={() => void identity.logout()}>Sign out</button></div> : <button className="account-button" type="button" onClick={() => identity.open('login')}>Account</button>}
+          <button className="bag-button" type="button" onClick={bag.open} aria-label={`Shopping bag with ${bag.cart?.totalQuantity ?? 0} items`}><span>Bag</span><span className="bag-count">{bag.cart?.totalQuantity ?? 0}</span></button>
+        </div>
       </header>
 
       <main id="top">
@@ -68,7 +76,7 @@ const App = () => {
           </div>
           {loading && <div className="product-grid" aria-label="Loading products" aria-busy="true">{[1, 2, 3].map((item) => <div className="product-skeleton" key={item} />)}</div>}
           {error && <div className="error-state" role="alert"><p>{error}</p><button type="button" onClick={() => setRequestKey((key) => key + 1)}>Try again</button></div>}
-          {!loading && !error && <div className="product-grid">{visibleProducts.map((product) => <ProductCard key={product.id} product={product} onAdd={() => setBagCount((count) => count + 1)} />)}</div>}
+          {!loading && !error && <div className="product-grid">{visibleProducts.map((product) => <ProductCard key={product.id} product={product} isAdding={bag.isUpdating} onAdd={() => void bag.addProduct(product)} />)}</div>}
         </section>
 
         <section className="principles-section" id="principles" aria-labelledby="principles-title">
@@ -81,6 +89,8 @@ const App = () => {
         </section>
       </main>
       <footer className="site-footer"><div className="brand footer-brand"><span className="brand-mark" aria-hidden="true">C</span><span>CartCraft</span></div><p>Thoughtful commerce, built one useful object at a time.</p><span>© 2026 CartCraft</span></footer>
+      <CartDrawer cart={bag.cart} error={bag.error} isOpen={bag.isOpen} isUpdating={bag.isUpdating} onClose={bag.close} onRemove={(productId) => void bag.removeProduct(productId)} onUpdateQuantity={(productId, quantity) => void bag.updateQuantity(productId, quantity)} />
+      <IdentityPanel error={identity.error} isOpen={identity.isOpen} isSubmitting={identity.isSubmitting} mode={identity.mode} onClose={identity.close} onModeChange={identity.setMode} onSubmit={(email, password, displayName) => void identity.submit(email, password, displayName)} />
     </div>
   )
 }
