@@ -4,7 +4,8 @@ Thumbs.db
 
 # IDE and editor settings
 .idea/
-.vscode/
+.vscode/*
+!.vscode/settings.json
 *.iml
 
 # Local AI coding-agent metadata

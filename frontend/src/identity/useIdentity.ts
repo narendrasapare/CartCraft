@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { fetchCurrentCustomer, loginCustomer, logoutCustomer, registerCustomer } from './api'
 import type { Customer, IdentityMode } from './types'
 
 export const useIdentity = () => {
+  const { t } = useTranslation()
   const [customer, setCustomer] = useState<Customer | null>(null)
   const [mode, setMode] = useState<IdentityMode>('login')
   const [isOpen, setIsOpen] = useState(false)
@@ -10,7 +12,9 @@ export const useIdentity = () => {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    fetchCurrentCustomer().then(setCustomer).catch(() => setCustomer(null))
+    fetchCurrentCustomer()
+      .then(setCustomer)
+      .catch(() => setCustomer(null))
   }, [])
 
   const open = (nextMode: IdentityMode = 'login') => {
@@ -29,7 +33,9 @@ export const useIdentity = () => {
       setCustomer(await loginCustomer(email, password))
       setIsOpen(false)
     } catch (requestError) {
-      setError(requestError instanceof Error ? requestError.message : 'Authentication failed.')
+      setError(
+        requestError instanceof Error ? t(requestError.message) : t('account.authenticationFailed'),
+      )
     } finally {
       setIsSubmitting(false)
     }
@@ -41,7 +47,7 @@ export const useIdentity = () => {
       await logoutCustomer()
       setCustomer(null)
     } catch (requestError) {
-      setError(requestError instanceof Error ? requestError.message : 'Sign out failed.')
+      setError(requestError instanceof Error ? t(requestError.message) : t('account.signOutFailed'))
     }
   }
 
