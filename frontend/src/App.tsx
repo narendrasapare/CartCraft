@@ -1,72 +1,50 @@
-import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { fetchProducts } from './catalogue/api'
-import { ProductCard } from './catalogue/ProductCard'
-import type { Product } from './catalogue/types'
 import { CartDrawer } from './cart/CartDrawer'
 import { useCart } from './cart/useCart'
+import { CataloguePage } from './catalogue/CataloguePage'
+import { ProductDetailPage } from './catalogue/ProductDetailPage'
+import type { SupportedLanguage } from './config'
 import { IdentityPanel } from './identity/IdentityPanel'
 import { useIdentity } from './identity/useIdentity'
 import { changeLanguage } from './i18n'
-import { routes } from './routes'
-import type { SupportedLanguage } from './config'
+import { navigateFromLink, useBrowserLocation } from './navigation'
+import { productSlugFromPath, routes } from './routes'
 import './App.css'
-
-const categories = [
-  { id: 'all', labelKey: 'catalogue.all' },
-  { id: 1, labelKey: 'catalogue.electronics' },
-  { id: 2, labelKey: 'catalogue.accessories' },
-] as const
 
 const App = () => {
   const { t, i18n } = useTranslation()
-  const [products, setProducts] = useState<Product[]>([])
-  const [selectedCategory, setSelectedCategory] = useState<string | number>('all')
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<{ message?: string } | null>(null)
-  const [requestKey, setRequestKey] = useState(0)
+  const location = useBrowserLocation()
   const bag = useCart()
   const identity = useIdentity()
-
-  useEffect(() => {
-    const controller = new AbortController()
-    const loadProducts = async () => {
-      setLoading(true)
-      setError(null)
-      try {
-        setProducts(await fetchProducts(controller.signal))
-      } catch (requestError) {
-        if (!controller.signal.aborted) {
-          setError(requestError instanceof Error ? { message: requestError.message } : {})
-        }
-      } finally {
-        if (!controller.signal.aborted) setLoading(false)
-      }
-    }
-    void loadProducts()
-    return () => controller.abort()
-  }, [requestKey])
-
-  const visibleProducts = useMemo(
-    () =>
-      selectedCategory === 'all'
-        ? products
-        : products.filter((product) => product.categoryId === selectedCategory),
-    [products, selectedCategory],
-  )
+  const productSlug = productSlugFromPath(location.pathname)
 
   return (
     <div className="site-shell">
       <header className="site-header">
-        <a className="brand" href={routes.home} aria-label="CartCraft home">
+        <a
+          className="brand"
+          href={routes.home}
+          onClick={(event) => navigateFromLink(event, routes.home)}
+          aria-label="CartCraft home"
+        >
           <span className="brand-mark" aria-hidden="true">
             C
           </span>
           <span>CartCraft</span>
         </a>
         <nav className="primary-nav" aria-label={t('nav.primary')}>
-          <a href={routes.collection}>{t('nav.collection')}</a>
-          <a href={routes.principles}>{t('nav.principles')}</a>
+          <a
+            href={routes.collection}
+            onClick={(event) => navigateFromLink(event, routes.collection)}
+          >
+            {t('nav.collection')}
+          </a>
+          <a
+            href={routes.principles}
+            onClick={(event) => navigateFromLink(event, routes.principles)}
+          >
+            {t('nav.principles')}
+          </a>
         </nav>
         <div className="header-actions">
           <label className="language-picker">
@@ -105,93 +83,26 @@ const App = () => {
         </div>
       </header>
 
-      <main id="top">
-        <section className="hero-section" aria-labelledby="hero-title">
-          <div className="hero-copy">
-            <p className="eyebrow">{t('hero.eyebrow')}</p>
-            <h1 id="hero-title">{t('hero.title')}</h1>
-            <p className="hero-intro">{t('hero.intro')}</p>
-            <a className="hero-link" href={routes.collection}>
-              {t('hero.explore')} <span aria-hidden="true">↓</span>
-            </a>
-          </div>
-          <div className="hero-note" aria-label={t('hero.noteLabel')}>
-            <span>{t('hero.edition')}</span>
-            <p>{t('hero.note')}</p>
-          </div>
-        </section>
+      {productSlug ? (
+        <ProductDetailPage
+          slug={productSlug}
+          isAdding={bag.isUpdating}
+          onAdd={(product) => void bag.addProduct(product)}
+        />
+      ) : location.pathname === '/' ? (
+        <CataloguePage
+          isAdding={bag.isUpdating}
+          onAdd={(product) => void bag.addProduct(product)}
+        />
+      ) : (
+        <main className="product-detail-state">
+          <h1>{t('errors.pageNotFound')}</h1>
+          <a href={routes.home} onClick={(event) => navigateFromLink(event, routes.home)}>
+            {t('catalogue.backToCollection')}
+          </a>
+        </main>
+      )}
 
-        <section className="collection-section" id="collection" aria-labelledby="collection-title">
-          <div className="section-heading">
-            <div>
-              <p className="eyebrow">{t('catalogue.eyebrow')}</p>
-              <h2 id="collection-title">{t('catalogue.title')}</h2>
-            </div>
-            <p>{t('catalogue.pieces', { count: visibleProducts.length })}</p>
-          </div>
-          <div className="category-filter" aria-label={t('catalogue.filterLabel')}>
-            {categories.map((category) => (
-              <button
-                className={selectedCategory === category.id ? 'is-active' : ''}
-                key={category.id}
-                type="button"
-                onClick={() => setSelectedCategory(category.id)}
-              >
-                {t(category.labelKey)}
-              </button>
-            ))}
-          </div>
-          {loading && (
-            <div className="product-grid" aria-label={t('catalogue.loading')} aria-busy="true">
-              {[1, 2, 3].map((item) => (
-                <div className="product-skeleton" key={item} />
-              ))}
-            </div>
-          )}
-          {error && (
-            <div className="error-state" role="alert">
-              <p>{error.message ? t(error.message) : t('catalogue.unavailable')}</p>
-              <button type="button" onClick={() => setRequestKey((key) => key + 1)}>
-                {t('catalogue.retry')}
-              </button>
-            </div>
-          )}
-          {!loading && !error && (
-            <div className="product-grid">
-              {visibleProducts.map((product) => (
-                <ProductCard
-                  key={product.id}
-                  product={product}
-                  isAdding={bag.isUpdating}
-                  onAdd={() => void bag.addProduct(product)}
-                />
-              ))}
-            </div>
-          )}
-        </section>
-
-        <section className="principles-section" id="principles" aria-labelledby="principles-title">
-          <p className="eyebrow">{t('principles.eyebrow')}</p>
-          <h2 id="principles-title">{t('principles.title')}</h2>
-          <div className="principles-grid">
-            <article>
-              <span>01</span>
-              <h3>{t('principles.usefulTitle')}</h3>
-              <p>{t('principles.usefulText')}</p>
-            </article>
-            <article>
-              <span>02</span>
-              <h3>{t('principles.stayTitle')}</h3>
-              <p>{t('principles.stayText')}</p>
-            </article>
-            <article>
-              <span>03</span>
-              <h3>{t('principles.clearTitle')}</h3>
-              <p>{t('principles.clearText')}</p>
-            </article>
-          </div>
-        </section>
-      </main>
       <footer className="site-footer">
         <div className="brand footer-brand">
           <span className="brand-mark" aria-hidden="true">

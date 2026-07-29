@@ -2,6 +2,8 @@ import type { Product } from './types'
 import { useTranslation } from 'react-i18next'
 import { localeFor } from '../i18n'
 import { appConfig } from '../config'
+import { navigateFromLink } from '../navigation'
+import { routes } from '../routes'
 
 export const ProductCard = ({
   product,
@@ -26,14 +28,26 @@ export const ProductCard = ({
   return (
     <article className="product-card">
       <div className="product-image-wrap">
-        <img src={product.imageUrl} alt={product.name} loading="lazy" />
+        <a
+          href={routes.product(product.slug)}
+          onClick={(event) => navigateFromLink(event, routes.product(product.slug))}
+        >
+          <img src={product.imageUrl} alt={product.name} loading="lazy" />
+        </a>
         <span className="product-category">
           {categoryNames[product.categoryId] ?? t('catalogue.collection')}
         </span>
       </div>
       <div className="product-details">
         <div>
-          <h3>{product.name}</h3>
+          <h3>
+            <a
+              href={routes.product(product.slug)}
+              onClick={(event) => navigateFromLink(event, routes.product(product.slug))}
+            >
+              {product.name}
+            </a>
+          </h3>
           <p className="product-description">{product.description}</p>
         </div>
         <div className="product-action">

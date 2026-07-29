@@ -18,12 +18,48 @@ class ProductControllerIntegrationTests {
     private MockMvc mockMvc;
 
     @Test
-    void returnsActiveProductsOrderedByName() throws Exception {
+    void returnsPagedActiveProductsOrderedByName() throws Exception {
         mockMvc.perform(get("/api/products"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(3))
-                .andExpect(jsonPath("$[0].name").value("Everyday Backpack"))
-                .andExpect(jsonPath("$[1].name").value("Mechanical Keyboard"))
-                .andExpect(jsonPath("$[2].name").value("Wireless Headphones"));
+                .andExpect(jsonPath("$.items.length()").value(3))
+                .andExpect(jsonPath("$.items[0].name").value("Everyday Backpack"))
+                .andExpect(jsonPath("$.items[1].name").value("Mechanical Keyboard"))
+                .andExpect(jsonPath("$.items[2].name").value("Wireless Headphones"))
+                .andExpect(jsonPath("$.page").value(0))
+                .andExpect(jsonPath("$.pageSize").value(12))
+                .andExpect(jsonPath("$.totalItems").value(3))
+                .andExpect(jsonPath("$.totalPages").value(1));
+    }
+
+    @Test
+    void searchesFiltersAndSortsProducts() throws Exception {
+        mockMvc.perform(get("/api/products")
+                        .param("categoryId", "1")
+                        .param("query", "wireless")
+                        .param("sort", "PRICE_DESC"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items.length()").value(1))
+                .andExpect(jsonPath("$.items[0].slug").value("wireless-headphones"))
+                .andExpect(jsonPath("$.totalItems").value(1));
+    }
+
+    @Test
+    void returnsProductDetailsBySlug() throws Exception {
+        mockMvc.perform(get("/api/products/mechanical-keyboard"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value("Mechanical Keyboard"))
+                .andExpect(jsonPath("$.slug").value("mechanical-keyboard"));
+    }
+
+    @Test
+    void rejectsInvalidPageSize() throws Exception {
+        mockMvc.perform(get("/api/products").param("size", "100"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void returnsNotFoundForUnknownProduct() throws Exception {
+        mockMvc.perform(get("/api/products/not-a-product"))
+                .andExpect(status().isNotFound());
     }
 }
