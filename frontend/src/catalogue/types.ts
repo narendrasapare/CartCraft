@@ -7,3 +7,21 @@ export type Product = {
   imageUrl: string
   categoryId: number
 }
+
+export type ProductPage = {
+  items: Product[]
+  page: number
+  pageSize: number
+  totalItems: number
+  totalPages: number
+}
+
+export type ProductSort = 'NAME' | 'PRICE_ASC' | 'PRICE_DESC' | 'NEWEST'
+
+export type ProductQuery = {
+  categoryId?: number
+  page: number
+  query: string
+  size: number
+  sort: ProductSort
+}

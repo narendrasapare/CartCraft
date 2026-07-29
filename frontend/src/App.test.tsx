@@ -35,9 +35,18 @@ const products = [
   },
 ]
 
+const pagedProducts = {
+  items: products,
+  page: 0,
+  pageSize: 6,
+  totalItems: products.length,
+  totalPages: 1,
+}
+
 describe('App', () => {
   beforeEach(async () => {
     localStorage.clear()
+    window.history.replaceState(null, '', '/')
     clearCsrfToken()
     document.documentElement.lang = 'en'
     await i18n.changeLanguage('en')
@@ -52,7 +61,7 @@ describe('App', () => {
       'fetch',
       vi.fn().mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
         const url = input.toString()
-        if (url === '/api/products') return { ok: true, json: async () => products }
+        if (url.startsWith('/api/products?')) return { ok: true, json: async () => pagedProducts }
         if (url === '/api/auth/me') return { ok: false, status: 401 }
         if (url === '/api/auth/csrf')
           return {
@@ -107,7 +116,7 @@ describe('App', () => {
       'fetch',
       vi.fn().mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
         const url = input.toString()
-        if (url === '/api/products') return { ok: true, json: async () => products }
+        if (url.startsWith('/api/products?')) return { ok: true, json: async () => pagedProducts }
         if (url === '/api/auth/me') return { ok: false, status: 401 }
         if (url === '/api/auth/csrf')
           return {
@@ -145,7 +154,7 @@ describe('App', () => {
       'fetch',
       vi.fn().mockImplementation(async (input: RequestInfo | URL) => {
         const url = input.toString()
-        if (url === '/api/products') return { ok: true, json: async () => products }
+        if (url.startsWith('/api/products?')) return { ok: true, json: async () => pagedProducts }
         if (url === '/api/auth/me') return { ok: false, status: 401 }
         throw new Error(`Unexpected request: GET ${url}`)
       }),
@@ -166,5 +175,31 @@ describe('App', () => {
     expect(await screen.findByRole('button', { name: 'ఖాతా' })).toBeInTheDocument()
     expect(localStorage.getItem('cartcraft.language')).toBe('te')
     expect(document.documentElement.lang).toBe('te')
+  })
+
+  it('opens a product detail route without reloading the application', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockImplementation(async (input: RequestInfo | URL) => {
+        const url = input.toString()
+        if (url.startsWith('/api/products?')) return { ok: true, json: async () => pagedProducts }
+        if (url === '/api/products/everyday-backpack') {
+          return { ok: true, json: async () => products[0] }
+        }
+        if (url === '/api/auth/me') return { ok: false, status: 401 }
+        throw new Error(`Unexpected request: GET ${url}`)
+      }),
+    )
+
+    const user = userEvent.setup()
+    render(<App />)
+    const productLinks = await screen.findAllByRole('link', { name: 'Everyday Backpack' })
+    await user.click(productLinks[1])
+
+    expect(
+      await screen.findByRole('heading', { name: 'Everyday Backpack', level: 1 }),
+    ).toBeInTheDocument()
+    expect(window.location.pathname).toBe('/products/everyday-backpack')
+    expect(screen.getByRole('link', { name: 'Back to collection' })).toBeInTheDocument()
   })
 })
