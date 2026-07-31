@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&family=Noto+Sans+Devanagari:wght@400;500;600;700&family=Noto+Sans+Telugu:wght@400;500;600;700&family=Noto+Serif+Devanagari:wght@400;500;600&family=Noto+Serif+Telugu:wght@400;500;600&display=swap');
 
 :root {
   --paper: #f5f0e7;
@@ -15,6 +15,16 @@
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
+}
+
+html:lang(hi) {
+  --sans: 'Noto Sans Devanagari', 'Nirmala UI', sans-serif;
+  --serif: 'Noto Serif Devanagari', 'Nirmala UI', serif;
+}
+
+html:lang(te) {
+  --sans: 'Noto Sans Telugu', 'Nirmala UI', sans-serif;
+  --serif: 'Noto Serif Telugu', 'Nirmala UI', serif;
 }
 
 * {

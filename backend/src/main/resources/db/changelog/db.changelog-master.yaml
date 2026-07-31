@@ -1,0 +1,22 @@
+databaseChangeLog:
+  - include:
+      file: changes/001-create-categories.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: changes/002-create-products.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: changes/003-seed-initial-catalogue.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: changes/004-create-guest-carts.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: changes/005-create-customer-identity.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: changes/006-index-catalogue-discovery.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: changes/007-expand-initial-catalogue.yaml
+      relativeToChangelogFile: true

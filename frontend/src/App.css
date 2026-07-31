@@ -144,6 +144,36 @@
   line-height: 0.84;
   margin: 0;
 }
+
+html:lang(hi) .hero-copy h1,
+html:lang(te) .hero-copy h1 {
+  font-size: clamp(3rem, 6vw, 6.25rem);
+  letter-spacing: 0;
+  line-height: 1.14;
+  max-width: 920px;
+}
+
+html:lang(hi) .eyebrow,
+html:lang(te) .eyebrow,
+html:lang(hi) .primary-nav a,
+html:lang(te) .primary-nav a,
+html:lang(hi) .account-button,
+html:lang(te) .account-button,
+html:lang(hi) .hero-link,
+html:lang(te) .hero-link,
+html:lang(hi) .hero-note span,
+html:lang(te) .hero-note span {
+  letter-spacing: 0.02em;
+  text-transform: none;
+}
+
+html:lang(hi) .section-heading h2,
+html:lang(te) .section-heading h2,
+html:lang(hi) .principles-section h2,
+html:lang(te) .principles-section h2 {
+  letter-spacing: 0;
+  line-height: 1.2;
+}
 .hero-intro {
   color: var(--muted);
   font-size: clamp(1rem, 1.5vw, 1.2rem);

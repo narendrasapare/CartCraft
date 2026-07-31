@@ -1,0 +1,67 @@
+databaseChangeLog:
+  - changeSet:
+      id: 007-expand-initial-catalogue
+      author: cartcraft
+      changes:
+        - update:
+            tableName: products
+            columns:
+              - column:
+                  name: image_url
+                  value: /images/products/mechanical-keyboard-v2.jpg
+            where: slug = 'mechanical-keyboard'
+        - sql:
+            sql: |
+              INSERT INTO products (name, slug, description, price, image_url, category_id)
+              VALUES
+                  (
+                      'Portable Speaker',
+                      'portable-speaker',
+                      'A compact wireless speaker with balanced sound and all-day battery life.',
+                      3499.00,
+                      '/images/products/portable-speaker.jpg',
+                      (SELECT id FROM categories WHERE slug = 'electronics')
+                  ),
+                  (
+                      'Everyday Smartwatch',
+                      'everyday-smartwatch',
+                      'A lightweight smartwatch for activity tracking, notifications, and daily routines.',
+                      6999.00,
+                      '/images/products/smartwatch.jpg',
+                      (SELECT id FROM categories WHERE slug = 'electronics')
+                  ),
+                  (
+                      'Wireless Mouse',
+                      'wireless-mouse',
+                      'An ergonomic wireless mouse designed for comfortable, precise everyday work.',
+                      1599.00,
+                      '/images/products/wireless-mouse.jpg',
+                      (SELECT id FROM categories WHERE slug = 'electronics')
+                  ),
+                  (
+                      'Canvas Sling Bag',
+                      'canvas-sling-bag',
+                      'A compact crossbody bag with organized storage for everyday essentials.',
+                      2299.00,
+                      '/images/products/canvas-sling-bag.jpg',
+                      (SELECT id FROM categories WHERE slug = 'accessories')
+                  ),
+                  (
+                      'Insulated Travel Bottle',
+                      'insulated-travel-bottle',
+                      'A durable insulated bottle that keeps drinks at the right temperature for hours.',
+                      1299.00,
+                      '/images/products/insulated-travel-bottle.jpg',
+                      (SELECT id FROM categories WHERE slug = 'accessories')
+                  );
+      rollback:
+        - delete:
+            tableName: products
+            where: slug IN ('portable-speaker', 'everyday-smartwatch', 'wireless-mouse', 'canvas-sling-bag', 'insulated-travel-bottle')
+        - update:
+            tableName: products
+            columns:
+              - column:
+                  name: image_url
+                  value: /images/products/mechanical-keyboard.webp
+            where: slug = 'mechanical-keyboard'
