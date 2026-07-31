@@ -1,0 +1,19 @@
+databaseChangeLog:
+  - changeSet:
+      id: 006-index-catalogue-discovery
+      author: cartcraft
+      changes:
+        - sql:
+            sql: |
+              CREATE INDEX idx_products_active_category_name
+                  ON products (category_id, name, id)
+                  WHERE active = TRUE;
+
+              CREATE INDEX idx_products_active_price
+                  ON products (price, id)
+                  WHERE active = TRUE;
+      rollback:
+        - sql:
+            sql: |
+              DROP INDEX idx_products_active_price;
+              DROP INDEX idx_products_active_category_name;

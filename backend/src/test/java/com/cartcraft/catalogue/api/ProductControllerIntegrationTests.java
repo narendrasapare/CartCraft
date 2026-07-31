@@ -21,13 +21,12 @@ class ProductControllerIntegrationTests {
     void returnsPagedActiveProductsOrderedByName() throws Exception {
         mockMvc.perform(get("/api/products"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.items.length()").value(3))
-                .andExpect(jsonPath("$.items[0].name").value("Everyday Backpack"))
-                .andExpect(jsonPath("$.items[1].name").value("Mechanical Keyboard"))
-                .andExpect(jsonPath("$.items[2].name").value("Wireless Headphones"))
+                .andExpect(jsonPath("$.items.length()").value(8))
+                .andExpect(jsonPath("$.items[0].name").value("Canvas Sling Bag"))
+                .andExpect(jsonPath("$.items[7].name").value("Wireless Mouse"))
                 .andExpect(jsonPath("$.page").value(0))
                 .andExpect(jsonPath("$.pageSize").value(12))
-                .andExpect(jsonPath("$.totalItems").value(3))
+                .andExpect(jsonPath("$.totalItems").value(8))
                 .andExpect(jsonPath("$.totalPages").value(1));
     }
 
@@ -35,7 +34,7 @@ class ProductControllerIntegrationTests {
     void searchesFiltersAndSortsProducts() throws Exception {
         mockMvc.perform(get("/api/products")
                         .param("categoryId", "1")
-                        .param("query", "wireless")
+                        .param("query", "headphones")
                         .param("sort", "PRICE_DESC"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.items.length()").value(1))
